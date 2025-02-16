@@ -1,0 +1,45 @@
+﻿@model IEnumerable<User>
+
+@{
+    ViewData["Title"] = "ShowData";
+}
+
+@if (Model.Any())
+{
+    <table class="table table-dark">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Password</th>
+            <th>Edit</th>
+            <th>Remove</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.ID</td>
+                <td>@user.Username</td>
+                <td>@user.Password</td>
+                <td><a class="btn btn-warning"
+                       asp-controller="Register"
+                       asp-action="Edit"
+                       asp-route-id="@user.ID">Edit</a>
+                </td>
+                <td><a class="btn btn-danger"
+                       asp-controller="Register"
+                       asp-action="Remove"
+                       asp-route-id="@user.ID"
+                       onclick="return confirm('Confirm Remove? ID:@user.ID Name:@user.Username')"
+                    >Remove</a></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-secondary">No data</div>
+}
