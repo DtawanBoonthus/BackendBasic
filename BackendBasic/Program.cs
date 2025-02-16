@@ -11,7 +11,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(optionsBuilder =>
 
 builder.Services.AddHttpClient<IRegisterService, RegisterService>(client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7105/"); // ✅ ตั้งค่า Base URL ของ API
+    client.BaseAddress = new Uri("https://localhost:7105/");
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApiDocument(config =>

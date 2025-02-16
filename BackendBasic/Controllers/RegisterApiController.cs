@@ -24,10 +24,10 @@ public class RegisterApiController(ApplicationDbContext dbContext) : ControllerB
         
         if (users is {Count: <= 0})
         {
-            return NoContent(); // ✅ 204 No Content ถ้าไม่มีข้อมูล
+            return NoContent();
         }
 
-        return Ok(users); // ✅ 200 OK พร้อมส่งข้อมูลกลับ
+        return Ok(users);
     }
 
     [HttpGet("get-user/{id:int}")]
