@@ -22,12 +22,7 @@ public class RegisterApiController(ApplicationDbContext dbContext) : ControllerB
             })
             .ToListAsync();
         
-        if (users is {Count: <= 0})
-        {
-            return NoContent();
-        }
-
-        return Ok(users);
+        return Ok(users is {Count: <= 0} ? Enumerable.Empty<User>() : users);
     }
 
     [HttpGet("get-user/{id:int}")]
