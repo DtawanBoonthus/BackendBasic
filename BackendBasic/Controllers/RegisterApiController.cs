@@ -1,13 +1,17 @@
-﻿using BackendBasic.Data;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using BackendBasic.Data;
 using BackendBasic.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace BackendBasic.Controllers;
 
 [ApiController]
 [Route("api/register")]
-public class RegisterApiController(ApplicationDbContext dbContext) : ControllerBase
+public class RegisterApiController(ApplicationDbContext dbContext, IConfiguration configuration) : ControllerBase
 {
     [HttpGet("get-users")]
     public async Task<ActionResult<IEnumerable<User>>> GetUsers()
@@ -69,6 +73,47 @@ public class RegisterApiController(ApplicationDbContext dbContext) : ControllerB
         }
 
         return CreatedAtAction(nameof(GetUserById), new { id = user.ID }, user);
+    }
+
+    [HttpPost("login")]
+    public async Task<ActionResult<string>> Login([FromBody] User request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        
+        var user = await dbContext.UserDb
+            .FirstOrDefaultAsync(u => u.Username == request.Username)
+            .ConfigureAwait(false);
+    
+        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
+        {
+            return Unauthorized(new { message = "Invalid username or password." });
+        }
+
+        var token = CreateToken(user);
+
+        return Ok(token);
+    }
+
+    private string CreateToken(User user)
+    {
+        var claims = new List<Claim>()
+        {
+            new(ClaimTypes.Name, user.Username),
+            new(ClaimTypes.NameIdentifier, user.ID.ToString())
+        };
+        
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetValue<string>("AppSettings:Token")!));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
+        var tokenDescriptor = new JwtSecurityToken(
+            issuer: configuration.GetValue<string>("AppSettings:Issuer"),
+            audience: configuration.GetValue<string>("AppSettings:Audience"),
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(1),
+            signingCredentials: creds);
+        return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
     }
 
     [HttpPut("update-user")]
