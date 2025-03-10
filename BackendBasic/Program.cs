@@ -1,6 +1,9 @@
+using System.Text;
 using BackendBasic.Data;
 using BackendBasic.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +14,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(optionsBuilder =>
 
 builder.Services.AddHttpClient<IRegisterService, RegisterService>(client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7105/");
+    client.BaseAddress = new Uri("http://localhost:5051/");
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApiDocument(config =>
@@ -20,6 +23,17 @@ builder.Services.AddOpenApiDocument(config =>
     config.Title = "BasicAPI v1";
     config.Version = "v1";
 });
+
+builder.Services.AddAuthorization();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o =>
+    {
+        o.RequireHttpsMetadata = false;
+        o.TokenValidationParameters = new TokenValidationParameters
+        {
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("AppSettings:Issuer")!)),
+        };
+    });
 
 var app = builder.Build();
 
@@ -46,6 +60,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

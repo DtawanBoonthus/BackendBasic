@@ -99,7 +99,7 @@ public class RegisterApiController(ApplicationDbContext dbContext, IConfiguratio
 
     private string CreateToken(User user)
     {
-        var claims = new List<Claim>()
+        var claims = new Claim[]
         {
             new(ClaimTypes.Name, user.Username),
             new(ClaimTypes.NameIdentifier, user.ID.ToString())
